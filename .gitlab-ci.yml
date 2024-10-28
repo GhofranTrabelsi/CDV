@@ -1,0 +1,44 @@
+
+
+stages:
+  - run-tests
+
+
+variables:
+  image_build: docker.factory.be-ys.net/ci/build-java-17
+
+
+.test_karate_template:
+  variables:
+    GIT_STRATEGY: fetch
+    GIT_CHECKOUT: "true"
+  script:
+    - ls -lrth src/test/java/
+    # - mvn clean install
+    # - mvn -U test  -Dmaven.test.failure.ignore=true -Dtest=TestRunner || exit_code=$?
+    # - exit $exit_code
+    - mvn -U test  -Dmaven.test.failure.ignore=true -Dtest=KarateTest
+    - ls /builds/prev/lifecycle-management/cdv-test-back-auto/target
+
+    # - access_key="${SSH_KEY_HP}" && echo "${access_key}" > ~/id_rsa_exec && chmod 600 ~/id_rsa_exec
+    # - 'ssh -o StrictHostKeyChecking=no -i ~/id_rsa_exec ${os_username}@${management_node}  " if [ -d "/var/www/html/reports-financial-dev/" ]; then sudo rm -rf /var/www/html/reports-financial-dev/ ; fi  "'
+    # - scp -o StrictHostKeyChecking=no -i ~/id_rsa_exec -r /builds/BCU/journal/financial-tests-auto/target/cucumber-html-reports/ /builds/BCU/journal/financial-tests-auto/target/karate-reports/ ${os_username}@${management_node}:/home/${os_username}/
+
+
+  artifacts:
+    name: "$CI_JOB_NAME"
+    paths:
+      - target/karate-reports/ 
+    when: always
+
+
+tnr-dev:
+  stage: run-tests
+  image: $image_build  
+  extends:
+    - .test_karate_template
+  # only:
+  #   - schedules
+  # except:
+  #   - triggers
+  when: manual
